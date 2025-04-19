@@ -130,6 +130,7 @@ fun GameBoard(board: Board, onCellClick: (row: Int, col: Int) -> Unit) {
 }
 
 
+
 @Preview(showBackground = true)
 @Composable
 fun PreviewCell_NoDirections() {
@@ -163,3 +164,29 @@ fun PreviewCell_TwoDirections() {
     )
 }
 
+
+@Preview(showBackground = true)
+@Composable
+fun PreviewGameBoard() {
+    val sampleBoard: Board = listOf(
+        listOf(
+            Cell(1), Cell(2), Cell(3), Cell(null)
+        ),
+        listOf(
+            Cell(null), Cell(4, setOf(Direction.HORIZONTAL)), Cell(null), Cell(5)
+        ),
+        listOf(
+            Cell(2, setOf(Direction.DIAGONAL_DOWN, Direction.VERTICAL)), Cell(null), Cell(3), Cell(null)
+        ),
+        listOf(
+            Cell(null), Cell(null), Cell(null), Cell(1, setOf(Direction.DIAGONAL_UP))
+        )
+    )
+
+    ThreeForTenGameApplicationMobileTheme {
+        GameBoard(board = sampleBoard) { row, col ->
+            // Simuler un clic
+            println("Clicked cell at [$row, $col]")
+        }
+    }
+}
