@@ -1,4 +1,9 @@
 package fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.screens
 
-class GameScreen {
+import androidx.compose.runtime.Composable
+
+
+@Composable
+fun GameScreen() {
+
 }
