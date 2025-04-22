@@ -25,6 +25,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.screens.WelcomeScreen
 import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.ui.theme.ThreeForTenGameApplicationMobileTheme
 
 class MainActivity : ComponentActivity() {
@@ -33,12 +34,18 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             ThreeForTenGameApplicationMobileTheme {
+                // Your previous code:
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     Greeting(
                         name = "Android",
                         modifier = Modifier.padding(innerPadding)
                     )
                 }
+                // Now also adding your WelcomeScreen:
+                WelcomeScreen(onValidated = { username ->
+                    // Par exemple : naviguer vers GamesScreen ou stocker dans ViewModel
+                    println("✅ Utilisateur validé : $username")
+                })
             }
         }
     }
@@ -76,7 +83,6 @@ fun GameCell(cell: Cell, onClick: () -> Unit = {}) {
             .size(48.dp)
             .background(Color.White)
             .border(1.dp, Color.Black),
-//        onClick=onClick,
         contentAlignment = Alignment.Center
     ) {
         // Affiche le chiffre au centre
