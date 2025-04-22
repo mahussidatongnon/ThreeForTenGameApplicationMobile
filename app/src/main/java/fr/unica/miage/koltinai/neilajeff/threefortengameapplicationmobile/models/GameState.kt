@@ -1,5 +1,19 @@
 package fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.models
 
-data class GameState(
-    val id: String
+import kotlinx.serialization.Serializable
+
+@Serializable
+class GameStateDTO (
+    var id: String? = null,
+    var gamePartId: String? = null,
+    var turn: Int = 1,
+    var currentPlayerIndex: Int = 0,
+    var currentPlayerId: String? = null,
+    var boardState: Array<Array<Cell?>>? = null,
+    var lastMove: PlayerTurn? = null,
+    var isFinished: Boolean = false,
+    var winnerIndex: Int? = null,
+    var createdAt: String? = null,
+    var updatedAt: String? = null,
+    var scores: HashMap<Int, Int> = hashMapOf(),
 )
