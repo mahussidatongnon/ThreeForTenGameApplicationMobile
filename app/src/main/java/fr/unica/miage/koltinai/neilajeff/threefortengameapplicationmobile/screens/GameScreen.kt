@@ -170,15 +170,18 @@ fun GameScreen(
                         GameItem(
                             GameItemViewModel(gamePart = game),
                             onAdd2ndPlayerClick = {
+                                println("onAdd2ndPlayerClick")
                             },
                             onStartedClick = {
-                                navController.to(PlayGameRoute(game.id, autoStart = true))
+                                println("onStartedClick")
+                                navController.navigate(PlayGameRoute(game.id, autoStart = true))
                             },
                             onReviewClick = {
-
+                                println("onReviewClick")
                             },
                             onContinueClick = {
-                                navController.to(PlayGameRoute(game.id, autoStart = false))
+                                println("onStartedClick")
+                                navController.navigate(PlayGameRoute(game.id, autoStart = false))
                             }
                         )
                     }

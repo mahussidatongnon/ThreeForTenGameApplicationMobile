@@ -52,7 +52,7 @@ fun MyApp(myAppViewModel: MyAppViewModel = MyAppViewModel()) {
                 myAppViewModel.loadPlayer(username)
                 // Naviguer immédiatement
                 navController.navigate(route = GAMES_ROUTE) {
-                    popUpTo(WELCOME_ROUTE) { inclusive = true }
+//                    popUpTo(WELCOME_ROUTE) { inclusive = true }
                 }
             }
         }
@@ -75,11 +75,12 @@ fun MyApp(myAppViewModel: MyAppViewModel = MyAppViewModel()) {
             }
         }
         composable<PlayGameRoute> { backStackEntry ->
+            val playGameRoute = backStackEntry.toRoute<PlayGameRoute>()
+
             MyAppScaffold(
                 navController = navController,
-                title = "3 pour 10 - Accueil"
+                title = "3 pour 10 - Game (${playGameRoute.gameId})"
             ) { paddingValues ->
-                val playGameRoute = backStackEntry.toRoute<PlayGameRoute>()
 
                 PlayGameScreen(PlayGameViewModel(playGameRoute.gameId, autoStart = playGameRoute.autoStart))
             }

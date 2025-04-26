@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.models.GamePart
 import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.models.GameState
 import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.models.Player
+import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.models.utils.GamePartStatus
 import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.repositories.GamePartRepository
 import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.service.GameManager
 import kotlinx.coroutines.launch
@@ -39,9 +40,21 @@ GamePartRepository = GamePartRepository()) : ViewModel() {
     }
 
     fun updateGame() {
+        val currentGamePart = _gamePart.value
+
+        if (currentGamePart == null) {
+            println("Pas de GamePart disponible pour startGame")
+            return
+        }
+
         viewModelScope.launch {
-            val gamePartInfo = gamePartRepository.getGameById(_gamePart.value!!.id)
-            _gamePart.value = gamePartInfo
+            val updatedGamePart: GamePart = gamePartRepository.getGameById(currentGamePart!!.id)
+            _gamePart.value = updatedGamePart
+
+            if(updatedGamePart.status == GamePartStatus.WAITING) {
+                println("Ce jeu n'a pas de state de disponible")
+                return@launch
+            }
 
             val gameState = gamePartRepository.getGameState(gamePart.value!!.id)
             _gameState.value = gameState
@@ -49,12 +62,28 @@ GamePartRepository = GamePartRepository()) : ViewModel() {
     }
 
     fun startGame() {
-        viewModelScope.launch {
-            val gamePartInfo = gamePartRepository.startGame(gamePart.value!!.id)
-            _gamePart.value = gamePartInfo
+        val currentGamePart = _gamePart.value
 
-            val gameState = gamePartRepository.getGameState(gamePart.value!!.id)
-            _gameState.value = gameState
+        if (currentGamePart == null) {
+            println("Pas de GamePart disponible pour startGame")
+            return
+        }
+
+        if (currentGamePart.status != GamePartStatus.WAITING) {
+            println("Le jeu est déjà démarré, pas besoin de startGame")
+            return
+        }
+
+        viewModelScope.launch {
+            try {
+                val updatedGamePart = gamePartRepository.startGame(currentGamePart.id)
+                _gamePart.value = updatedGamePart
+
+                val gameState = gamePartRepository.getGameState(updatedGamePart.id)
+                _gameState.value = gameState
+            } catch (e: Exception) {
+                println("Erreur lors du startGame: $e")
+            }
         }
     }
 }
