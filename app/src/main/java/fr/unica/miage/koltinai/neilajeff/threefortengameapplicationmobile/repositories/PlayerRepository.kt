@@ -22,7 +22,7 @@ data class GameInfo(
 
 class PlayerRepository() : BaseRepository() {
 
-    private val MODE_OFFLINE = true
+    private val MODE_OFFLINE = false
 
     suspend fun getPlayer(username: String): Player {
         Log.d("PlayerRepository", "Récupération du joueur: $username")

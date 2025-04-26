@@ -4,23 +4,19 @@ import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.models.GamePart
+import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.models.Player
 import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.service.GameManager
 import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.services.PlayerDataStoreManager
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.serialization.Serializable
+import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.repositories.PlayerRepository
+import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.repositories.GamePartRepository
 
-@Serializable
-data class GameInfo(
-    val id: String,
-    val creatorName: String,
-    val status: String
-)
 
 data class GameScreenUiState(
     val isLoading: Boolean = false,
@@ -29,10 +25,11 @@ data class GameScreenUiState(
     val gamesPlayed: Int = 0,
     val gamesWon: Int = 0,
     val totalScore: Int = 0,
-    val availableGames: List<GameInfo> = emptyList()
+    val availableGames: List<GamePart> = emptyList()
 )
 
-class GameScreenViewModel : ViewModel() {
+class GameScreenViewModel(val playerRepository: PlayerRepository = PlayerRepository(),
+                          val gamePartRepository: GamePartRepository = GamePartRepository()) : ViewModel() {
     private val _uiState = MutableStateFlow(GameScreenUiState())
     val uiState: StateFlow<GameScreenUiState> = _uiState.asStateFlow()
 
@@ -60,31 +57,25 @@ class GameScreenViewModel : ViewModel() {
                     _uiState.update { it.copy(playerName = username) }
 
                     // Essayer de récupérer les statistiques du joueur
-                    fetchPlayerStats(username)
-
+//                    fetchPlayerStats(username)
+                    val player: Player = playerRepository.getPlayer(username)
+                    _uiState.update {
+                        it.copy(
+                            playerName = player.username,
+                            gamesPlayed = player.gamesPlayed,
+                            gamesWon = player.gamesWon,
+                            totalScore = player.gamesWon,
+                            isLoading = false
+                        )
+                    }
                     // Récupérer les parties disponibles
-                    fetchAvailableGames()
+                    fetchAvailableGames(username)
                 } else {
-                    // Si pas de nom dans GameManager, essayer depuis DataStore
-                    val playerDataStoreManager = PlayerDataStoreManager(context)
-                    val storedUsername = playerDataStoreManager.loadUsername().first() ?: ""
-
-                    if (storedUsername.isNotEmpty()) {
-                        _uiState.update { it.copy(playerName = storedUsername) }
-                        GameManager.saveUsername(storedUsername)
-
-                        // Essayer de récupérer les statistiques du joueur
-                        fetchPlayerStats(storedUsername)
-
-                        // Récupérer les parties disponibles
-                        fetchAvailableGames()
-                    } else {
-                        _uiState.update {
-                            it.copy(
-                                isLoading = false,
-                                errorMessage = "Utilisateur non authentifié"
-                            )
-                        }
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            errorMessage = "Utilisateur non authentifié"
+                        )
                     }
                 }
             } catch (e: Exception) {
@@ -99,39 +90,12 @@ class GameScreenViewModel : ViewModel() {
         }
     }
 
-    private fun fetchPlayerStats(username: String) {
+    private fun fetchAvailableGames(username: String) {
         viewModelScope.launch(coroutineExceptionHandler) {
             try {
-                // Pour le développement, simulation des données du joueur
-                simulateAPIResponse(username)
-            } catch (e: Exception) {
-                Log.e("GameScreenViewModel", "Erreur lors de la récupération des stats", e)
-                // En cas d'erreur, on laisse les valeurs par défaut (0)
-                _uiState.update { it.copy(isLoading = false) }
-            }
-        }
-    }
-
-    private fun fetchAvailableGames() {
-        viewModelScope.launch(coroutineExceptionHandler) {
-            try {
-                // Pour le développement, on simule des données
-                val sampleGames = listOf(
-                    GameInfo(
-                        id = "game1",
-                        creatorName = "Alice",
-                        status = "En attente"
-                    ),
-                    GameInfo(
-                        id = "game2",
-                        creatorName = "Bob",
-                        status = "En cours"
-                    )
-                )
-
                 _uiState.update {
                     it.copy(
-                        availableGames = sampleGames,
+                        availableGames = gamePartRepository.getGamesByUsername(username),
                         isLoading = false
                     )
                 }
@@ -144,23 +108,6 @@ class GameScreenViewModel : ViewModel() {
                     )
                 }
             }
-        }
-    }
-
-    private fun simulateAPIResponse(username: String) {
-        // Simulation des stats du joueur pour le développement
-        val gamesPlayed = (1..10).random()
-        val gamesWon = (0..gamesPlayed).random()
-        val totalScore = (gamesWon * 10 + (gamesPlayed - gamesWon) * 3)
-
-        _uiState.update {
-            it.copy(
-                playerName = username,
-                gamesPlayed = gamesPlayed,
-                gamesWon = gamesWon,
-                totalScore = totalScore,
-                isLoading = false
-            )
         }
     }
 }

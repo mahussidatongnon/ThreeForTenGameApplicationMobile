@@ -13,15 +13,27 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
 import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.screens.GameScreen
+import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.screens.PlayGameScreen
 import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.screens.WelcomeScreen
 import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.screens.viewmodels.MyAppScaffoldViewModel
 import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.screens.viewmodels.MyAppViewModel
+import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.screens.viewmodels.PlayGameViewModel
 import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.ui.theme.Purple
 
 // Les routes définies comme strings simples
 const val WELCOME_ROUTE = "welcome"
 const val GAMES_ROUTE = "games"
+
+//@kotlinx.serialization.Serializable
+//object WelcomeRoute
+//
+//@kotlinx.serialization.Serializable
+//object GameRoute
+
+@kotlinx.serialization.Serializable
+data class PlayGameRoute(val gameId: String, val autoStart : Boolean = false)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -50,6 +62,7 @@ fun MyApp(myAppViewModel: MyAppViewModel = MyAppViewModel()) {
                 title = "3 pour 10 - Accueil"
             ) { paddingValues ->
                 GameScreen(
+                    navController = navController,
                     paddingValues = paddingValues,
                     onLogout = {
                         // Rediriger vers l'écran de connexion
@@ -59,6 +72,16 @@ fun MyApp(myAppViewModel: MyAppViewModel = MyAppViewModel()) {
                         }
                     }
                 )
+            }
+        }
+        composable<PlayGameRoute> { backStackEntry ->
+            MyAppScaffold(
+                navController = navController,
+                title = "3 pour 10 - Accueil"
+            ) { paddingValues ->
+                val playGameRoute = backStackEntry.toRoute<PlayGameRoute>()
+
+                PlayGameScreen(PlayGameViewModel(playGameRoute.gameId, autoStart = playGameRoute.autoStart))
             }
         }
     }

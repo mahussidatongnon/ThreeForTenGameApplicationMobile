@@ -21,6 +21,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
+import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.PlayGameRoute
+import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.models.utils.GamePartStatus
+import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.screens.viewmodels.GameItemViewModel
 import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.screens.viewmodels.GameScreenViewModel
 import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.service.GameManager
 import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.services.PlayerDataStoreManager
@@ -30,6 +34,7 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GameScreen(
+    navController: NavController,
     paddingValues: PaddingValues,
     viewModel: GameScreenViewModel = viewModel(),
     onLogout: () -> Unit
@@ -163,11 +168,17 @@ fun GameScreen(
                 ) {
                     uiState.availableGames.forEach { game ->
                         GameItem(
-                            gameId = game.id,
-                            creatorName = game.creatorName,
-                            status = game.status,
-                            onJoinClick = {
-                                // Action à implémenter pour rejoindre la partie
+                            GameItemViewModel(gamePart = game),
+                            onAdd2ndPlayerClick = {
+                            },
+                            onStartedClick = {
+                                navController.to(PlayGameRoute(game.id, autoStart = true))
+                            },
+                            onReviewClick = {
+
+                            },
+                            onContinueClick = {
+                                navController.to(PlayGameRoute(game.id, autoStart = false))
                             }
                         )
                     }
@@ -273,13 +284,20 @@ fun GameScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GameItem(
-    gameId: String,
-    creatorName: String,
-    status: String,
-    onJoinClick: () -> Unit
+    gameItemViewModel: GameItemViewModel,
+    onAdd2ndPlayerClick: () -> Unit = {},
+    onStartedClick: () -> Unit = {},
+    onContinueClick: () -> Unit = {},
+    onReviewClick: () -> Unit = {},
 ) {
+
+    val _color = when {
+        gameItemViewModel.gamePart.status == GamePartStatus.WAITING -> Yellow
+        gameItemViewModel.gamePart.status == GamePartStatus.STARTED -> Green
+        else -> Green
+    }
+
     Card(
-        onClick = onJoinClick,
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
         colors = CardDefaults.cardColors(
@@ -295,12 +313,12 @@ fun GameItem(
         ) {
             Column {
                 Text(
-                    text = "Partie de $creatorName",
+                    text = "Partie de ${gameItemViewModel.gamePart.player1.username}",
                     fontWeight = FontWeight.Medium,
                     color = Color.Black
                 )
                 Text(
-                    text = "ID: $gameId",
+                    text = "ID: ${gameItemViewModel.gamePart.id}",
                     fontSize = 12.sp,
                     color = Color.Gray
                 )
@@ -312,27 +330,62 @@ fun GameItem(
                         modifier = Modifier
                             .size(8.dp)
                             .background(
-                                color = if (status == "En attente") Yellow else Green,
+                                color = _color,
                                 shape = RoundedCornerShape(4.dp)
                             )
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "Statut: $status",
+                        text = "Statut: ${gameItemViewModel.gamePart.status}",
                         fontSize = 14.sp,
                         color = Color.DarkGray
                     )
                 }
             }
-
-            Button(
-                onClick = onJoinClick,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Blue
-                ),
-                shape = RoundedCornerShape(20.dp)
-            ) {
-                Text("Rejoindre")
+            if (gameItemViewModel.gamePart.status == GamePartStatus.WAITING) {
+                if (gameItemViewModel.gamePart.player2 == null) {
+                    Button(
+                        onClick = onAdd2ndPlayerClick,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = _color
+                        ),
+                        shape = RoundedCornerShape(20.dp),
+                    ) {
+                        Text("Ajouter Joueur", color = Color.Black)
+                    }
+                } else {
+                    Button(
+                        onClick = onStartedClick,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = _color
+                        ),
+                        shape = RoundedCornerShape(20.dp),
+                    ) {
+                        Text("Démarrer", color = Color.Black)
+                    }
+                }
+            } else {
+                if (gameItemViewModel.gamePart.status == GamePartStatus.STARTED) {
+                    Button(
+                        onClick = onContinueClick,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor =_color
+                        ),
+                        shape = RoundedCornerShape(20.dp),
+                    ) {
+                        Text("Continuer", color = Color.Black)
+                    }
+                } else {
+                    Button(
+                        onClick = onReviewClick,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = _color
+                        ),
+                        shape = RoundedCornerShape(20.dp),
+                    ) {
+                        Text("Revoir la partie", color = Color.Black)
+                    }
+                }
             }
         }
     }

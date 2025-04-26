@@ -3,7 +3,7 @@ package fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.model
 import kotlinx.serialization.Serializable
 
 @Serializable
-class GameStateDTO (
+class GameState (
     var id: String? = null,
     var gamePartId: String? = null,
     var turn: Int = 1,
