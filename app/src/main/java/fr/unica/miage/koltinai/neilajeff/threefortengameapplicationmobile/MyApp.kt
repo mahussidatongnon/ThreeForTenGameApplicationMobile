@@ -1,89 +1,112 @@
 package fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile
 
 import androidx.compose.foundation.layout.PaddingValues
-
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.BottomAppBar
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.graphics.Color
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.screens.GameScreen
 import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.screens.WelcomeScreen
 import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.screens.viewmodels.MyAppScaffoldViewModel
 import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.screens.viewmodels.MyAppViewModel
+import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.ui.theme.Purple
 
-@kotlinx.serialization.Serializable
-object GamesRoute
-
-@kotlinx.serialization.Serializable
-data class GameRoute(val idGame : String)
-
-@kotlinx.serialization.Serializable
-data class PlayGameRoute(val idGame : String)
-
-@kotlinx.serialization.Serializable
-object WelcomeRoute
-
+// Les routes définies comme strings simples
+const val WELCOME_ROUTE = "welcome"
+const val GAMES_ROUTE = "games"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MyApp(myAppViewModel: MyAppViewModel = MyAppViewModel()) {
     val navController = rememberNavController()
     val username = myAppViewModel.username
-    val startDestination: Any = if (username.value == null)
-                            WelcomeRoute
-                        else
-                            GamesRoute
+    val startDestination = if (username.value == null) WELCOME_ROUTE else GAMES_ROUTE
 
     NavHost(
         navController = navController,
         startDestination = startDestination,
     ) {
-        composable<WelcomeRoute> {
+        composable(WELCOME_ROUTE) {
             WelcomeScreen { username ->
+                // Au lieu d'utiliser LaunchedEffect ici
                 myAppViewModel.loadPlayer(username)
-                navController.navigate(route = GamesRoute)
+                // Naviguer immédiatement
+                navController.navigate(route = GAMES_ROUTE) {
+                    popUpTo(WELCOME_ROUTE) { inclusive = true }
+                }
             }
         }
-        composable<GamesRoute> {
-            MyAppScaffold(navController=navController)  { paddingValues ->
-                GamesRoute
+        composable(GAMES_ROUTE) {
+            MyAppScaffold(
+                navController = navController,
+                title = "3 pour 10 - Accueil"
+            ) { paddingValues ->
+                GameScreen(
+                    paddingValues = paddingValues,
+                    onLogout = {
+                        // Rediriger vers l'écran de connexion
+                        navController.navigate(WELCOME_ROUTE) {
+                            // Effacer toute la pile de navigation
+                            popUpTo(0) { inclusive = true }
+                        }
+                    }
+                )
             }
         }
-
     }
 }
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MyAppScaffold(myAppScaffoldViewModel: MyAppScaffoldViewModel = MyAppScaffoldViewModel(), navController: NavController, content: @Composable (PaddingValues) -> Unit) {
-    val currentRoute = navController.currentBackStackEntry?.destination
-//    val username = myAppScaffoldViewModel.username
-    println("currentRoute: $currentRoute")
-    Scaffold(
-        topBar = { TopAppBar(title = { Text("Games App") }) },
-        bottomBar = {
-            BottomAppBar {
+fun MyAppScaffold(
+    myAppScaffoldViewModel: MyAppScaffoldViewModel = MyAppScaffoldViewModel(),
+    navController: NavController,
+    title: String = "3 pour 10",
+    content: @Composable (PaddingValues) -> Unit
+) {
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
 
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(title, color = Color.White) },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Purple
+                )
+            )
+        },
+        bottomBar = {
+            // N'afficher la barre de navigation que sur l'écran principal
+            if (currentRoute != WELCOME_ROUTE) {
                 NavigationBar(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                    containerColor = Purple.copy(alpha = 0.1f)
                 ) {
                     NavigationBarItem(
                         icon = { Icon(imageVector = Icons.Default.Home, contentDescription = "Accueil") },
                         label = { Text("Accueil") },
-                        selected = currentRoute == GamesRoute,
-                        onClick = { navController.navigate(GamesRoute) }
+                        selected = currentRoute == GAMES_ROUTE,
+                        onClick = {
+                            if (currentRoute != GAMES_ROUTE) {
+                                navController.navigate(GAMES_ROUTE) {
+                                    // Popper au GAMES_ROUTE si on y est déjà
+                                    popUpTo(GAMES_ROUTE) { inclusive = true }
+                                }
+                            }
+                        },
+                        colors = NavigationBarItemDefaults.colors(
+                            selectedIconColor = Purple,
+                            selectedTextColor = Purple,
+                            indicatorColor = Purple.copy(alpha = 0.1f)
+                        )
                     )
                 }
             }
