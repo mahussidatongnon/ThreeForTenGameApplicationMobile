@@ -20,20 +20,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.models.Cell
+import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.models.utils.WinningDirection
 import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.ui.theme.ThreeForTenGameApplicationMobileTheme
 
 
-enum class Direction { HORIZONTAL, VERTICAL, DIAGONAL_DOWN, DIAGONAL_UP }
-
-data class Cell(
-    val value: Int?, // chiffre placé ou null
-    val usedDirections: Set<Direction> = emptySet()
-)
-
-typealias Board = List<List<Cell>>
+typealias Board = List<List<Cell?>>
 
 @Composable
-fun GameCell(cell: Cell, onClick: () -> Unit = {}) {
+fun GameCell(cell: Cell?, onClick: () -> Unit = {}) {
     Box(
         modifier = Modifier
             .size(48.dp)
@@ -43,17 +38,19 @@ fun GameCell(cell: Cell, onClick: () -> Unit = {}) {
     ) {
         // Affiche le chiffre au centre
         Text(
-            text = cell.value?.toString() ?: "",
+            text = cell?.value?.toString() ?: "",
             fontSize = 20.sp
         )
 
-        // Indicateurs de direction déjà utilisés
-        cell.usedDirections.forEach {
-            when (it) {
-                Direction.HORIZONTAL -> ArrowIcon(Alignment.TopCenter, 0f)         // ➡️
-                Direction.VERTICAL -> ArrowIcon(Alignment.CenterStart, 90f)       // ⬇️
-                Direction.DIAGONAL_DOWN -> ArrowIcon(Alignment.TopStart, 45f)     // ↘️
-                Direction.DIAGONAL_UP -> ArrowIcon(Alignment.BottomStart, -45f)   // ↗️
+        if (cell != null) {
+            // Indicateurs de direction déjà utilisés
+            cell.wonCasesDirections.forEach {
+                when (it) {
+                    WinningDirection.HORIZONTAL -> ArrowIcon(Alignment.TopCenter, 0f)         // ➡️
+                    WinningDirection.VERTICAL -> ArrowIcon(Alignment.CenterStart, 90f)       // ⬇️
+                    WinningDirection.DOWN_DIAGONAL -> ArrowIcon(Alignment.TopStart, 45f)     // ↘️
+                    WinningDirection.UP_DIAGONAL -> ArrowIcon(Alignment.BottomStart, -45f)   // ↗️
+                }
             }
         }
     }
@@ -103,11 +100,11 @@ fun PreviewCell_AllDirections() {
     GameCell(
         Cell(
             value = 4,
-            usedDirections = setOf(
-                Direction.HORIZONTAL,
-                Direction.VERTICAL,
-                Direction.DIAGONAL_DOWN,
-                Direction.DIAGONAL_UP
+            wonCasesDirections = setOf(
+                WinningDirection.HORIZONTAL,
+                WinningDirection.VERTICAL,
+                WinningDirection.DOWN_DIAGONAL,
+                WinningDirection.UP_DIAGONAL
             )
         )
     )
@@ -119,7 +116,7 @@ fun PreviewCell_TwoDirections() {
     GameCell(
         Cell(
             value = 2,
-            usedDirections = setOf(Direction.HORIZONTAL, Direction.DIAGONAL_DOWN)
+            wonCasesDirections = setOf(WinningDirection.HORIZONTAL, WinningDirection.DOWN_DIAGONAL)
         )
     )
 }
@@ -129,16 +126,16 @@ fun PreviewCell_TwoDirections() {
 fun PreviewGameBoard() {
     val sampleBoard: Board = listOf(
         listOf(
-            Cell(1), Cell(2), Cell(3), Cell(null)
+            Cell(1), Cell(2), Cell(3), null
         ),
         listOf(
-            Cell(null), Cell(4, setOf(Direction.HORIZONTAL)), Cell(null), Cell(5)
+            null, Cell(4, setOf(WinningDirection.HORIZONTAL)), null, Cell(5)
         ),
         listOf(
-            Cell(2, setOf(Direction.DIAGONAL_DOWN, Direction.VERTICAL)), Cell(null), Cell(3), Cell(null)
+            Cell(2, setOf(WinningDirection.DOWN_DIAGONAL, WinningDirection.VERTICAL)), null, Cell(3), null
         ),
         listOf(
-            Cell(null), Cell(null), Cell(null), Cell(1, setOf(Direction.DIAGONAL_UP))
+            null, null, null, Cell(1, setOf(WinningDirection.UP_DIAGONAL))
         )
     )
 

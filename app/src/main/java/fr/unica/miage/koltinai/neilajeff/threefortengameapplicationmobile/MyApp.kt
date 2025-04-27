@@ -52,7 +52,7 @@ fun MyApp(myAppViewModel: MyAppViewModel = MyAppViewModel()) {
                 myAppViewModel.loadPlayer(username)
                 // Naviguer immédiatement
                 navController.navigate(route = GAMES_ROUTE) {
-//                    popUpTo(WELCOME_ROUTE) { inclusive = true }
+                    popUpTo(WELCOME_ROUTE) { inclusive = true }
                 }
             }
         }

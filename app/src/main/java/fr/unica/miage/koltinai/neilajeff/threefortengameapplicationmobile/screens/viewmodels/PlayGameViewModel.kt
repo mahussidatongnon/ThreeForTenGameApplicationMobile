@@ -10,19 +10,26 @@ import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.models
 import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.models.utils.GamePartStatus
 import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.repositories.GamePartRepository
 import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.service.GameManager
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
+data class PlayGameUiState(
+    val isGameStateLoading: Boolean = false
+)
 class PlayGameViewModel(val gameId: String, autoStart: Boolean = false, val gamePartRepository:
 GamePartRepository = GamePartRepository()) : ViewModel() {
     private var _player: Player
-
     private var _gameState = mutableStateOf<GameState?>(null)
+    private var _gamePart = mutableStateOf<GamePart?>(null)
+    private val _uiState = MutableStateFlow(PlayGameUiState())
+
+    val gamePart: State<GamePart?>
+        get() = _gamePart
     val gameState: State<GameState?>
         get() = _gameState
-
-    private var _gamePart = mutableStateOf<GamePart?>(null)
-        val gamePart: State<GamePart?>
-            get() = _gamePart
+    val uiState: StateFlow<PlayGameUiState> = _uiState.asStateFlow()
 
     init {
         _player = GameManager.player!!

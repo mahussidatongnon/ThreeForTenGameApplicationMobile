@@ -9,7 +9,7 @@ class GameState (
     var turn: Int = 1,
     var currentPlayerIndex: Int = 0,
     var currentPlayerId: String? = null,
-    var boardState: Array<Array<Cell?>>? = null,
+    var boardState: List<List<Cell?>>? = null,
     var lastMove: PlayerTurn? = null,
     var isFinished: Boolean = false,
     var winnerIndex: Int? = null,

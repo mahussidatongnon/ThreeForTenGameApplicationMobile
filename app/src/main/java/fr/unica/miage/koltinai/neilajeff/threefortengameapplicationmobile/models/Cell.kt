@@ -6,5 +6,5 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class Cell(
     val value: Int = 0,
-    val wonCasesDirections: MutableSet<WinningDirection> = mutableSetOf()
+    val wonCasesDirections: Set<WinningDirection> = mutableSetOf()
 )

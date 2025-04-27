@@ -21,19 +21,36 @@ import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.ui.the
 fun PlayGameScreen(
     playGameViewModel: PlayGameViewModel
 ) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(LightBeige)
-    ) {
-        Column(
+
+    val gamePart = playGameViewModel.gamePart
+    val gameState = playGameViewModel.gameState
+
+    if (gamePart.value == null) {
+        println("GamePart is loading")
+    }
+
+    if (gameState.value == null) {
+        println("GameState is loading")
+    } else {
+        val board: Board = gameState.value!!.boardState!!
+
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(32.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+                .background(LightBeige),
         ) {
-            Text("PlayGameScreen", color = Color.Black)
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(32.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                GameBoard(board = board) { row, col ->
+                    // Simuler un clic
+                    println("Clicked cell at [$row, $col]")
+                }
+            }
         }
     }
 }
