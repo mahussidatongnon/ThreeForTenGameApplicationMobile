@@ -4,6 +4,9 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.dto.CoordinatePlayedDTO
+import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.dto.PlayGameDTO
+import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.dto.PointDTO
 import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.models.GamePart
 import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.models.GameState
 import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.models.Player
@@ -98,5 +101,19 @@ GamePartRepository = GamePartRepository()) : ViewModel() {
                 println("Erreur lors du startGame: $e")
             }
         }
+    }
+
+    fun playGame(value: Int, x: Int, y: Int) {
+        val playGameDTO = PlayGameDTO(
+            coordinates = PointDTO(x, y),
+            coinValue = value,
+            playerUsername = GameManager.username!!
+        )
+
+        viewModelScope.launch {
+            val gameState = gamePartRepository.playGame(gamePart.value!!.id, playGameDTO)
+            _gameState.value = gameState
+        }
+
     }
 }

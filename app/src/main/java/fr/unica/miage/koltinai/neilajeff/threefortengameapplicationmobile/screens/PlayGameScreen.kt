@@ -21,7 +21,6 @@ import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.ui.the
 fun PlayGameScreen(
     playGameViewModel: PlayGameViewModel
 ) {
-
     val gamePart = playGameViewModel.gamePart
     val gameState = playGameViewModel.gameState
 
@@ -46,10 +45,18 @@ fun PlayGameScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                GameBoard(board = board) { row, col ->
-                    // Simuler un clic
-                    println("Clicked cell at [$row, $col]")
-                }
+                GameBoard(board = board,
+                    onCellClick = { row, col ->
+                        // Simuler un clic
+                        println("Clicked cell at [$row, $col]")
+                    },
+                    onValueChange = { row, col, value ->
+                        // Mise à jour de la valeur de la cellule
+                        println("Setting value $value for cell [$row, $col]")
+                        // Tu peux aussi appeler ton ViewModel pour mettre à jour l'état du jeu ici
+                        playGameViewModel.playGame(value, row, col)
+                    }
+                )
             }
         }
     }

@@ -1,5 +1,6 @@
 package fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.repositories
 
+import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.dto.PlayGameDTO
 import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.models.GamePart
 import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.models.GameState
 import io.ktor.client.call.body
@@ -9,6 +10,8 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
+import io.ktor.http.isSuccess
+
 data class PointDTO(
     val x: Int = 0,
     val y: Int = 0,
@@ -79,6 +82,20 @@ class GamePartRepository():BaseRepository() {
             }
         }
         println("GamePart: ${resp.bodyAsText()}")
+        return resp.body()
+    }
+
+    suspend fun playGame(gameId: String, playGameDTO: PlayGameDTO): GameState {
+        val resp = client.post("$baseUrl/games/${gameId}/play") {
+            accept(ContentType.Application.Json)
+            contentType(ContentType.Application.Json)
+            setBody(playGameDTO)
+        }
+        if (resp.status.isSuccess()) {
+            return resp.body() // ou resp.bodyAsText() si vous voulez voir la réponse sous forme de texte
+        } else {
+            throw Exception("Error: ${resp.status}, ${resp.bodyAsText()}")
+        }
         return resp.body()
     }
 }

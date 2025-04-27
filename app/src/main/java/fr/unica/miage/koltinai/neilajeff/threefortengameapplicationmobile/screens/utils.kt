@@ -9,15 +9,34 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.input.TextFieldLineLimits
+import androidx.compose.foundation.text.input.rememberTextFieldState
+import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -28,33 +47,98 @@ import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.ui.the
 
 typealias Board = List<List<Cell?>>
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun GameCell(cell: Cell?, onClick: () -> Unit = {}) {
+fun GameCell(cell: Cell?, onClick: () -> Unit = {}, onValueChange: (Int) -> Unit = {}) {
+    var isDialogVisible by remember { mutableStateOf(false) }
+    var inputValue by remember { mutableStateOf(cell?.value?.toString() ?: "3") } // Valeur par défaut à 3
+    var errorMessage by remember { mutableStateOf("") } // Message d'erreur
+    var isValid by remember { mutableStateOf(true) } // Valider si la saisie est correcte
+
     Box(
         modifier = Modifier
             .size(50.dp)
             .background(Color.White)
             .border(1.dp, Color.Black)
-            .clickable { onClick() }, // Ajout du onClick ici
+            .clickable {
+                // Ne rien faire si la cellule est déjà remplie
+                if (cell?.value == null) {
+                    onClick()
+                    isDialogVisible = true // Afficher le popup
+                }
+            },
         contentAlignment = Alignment.Center,
     ) {
-        // Affiche le chiffre au centre
+        // Afficher la valeur de la cellule si ce n'est pas en mode édition
         Text(
             text = cell?.value?.toString() ?: "",
             fontSize = 25.sp
         )
+    }
 
-        if (cell != null) {
-            // Indicateurs de direction déjà utilisés
-            cell.wonCasesDirections.forEach {
-                when (it) {
-                    WinningDirection.HORIZONTAL -> ArrowIcon(Alignment.TopCenter, 0f)         // ➡️
-                    WinningDirection.VERTICAL -> ArrowIcon(Alignment.CenterStart, 90f)       // ⬇️
-                    WinningDirection.DOWN_DIAGONAL -> ArrowIcon(Alignment.TopStart, 45f)     // ↘️
-                    WinningDirection.UP_DIAGONAL -> ArrowIcon(Alignment.BottomStart, -45f)   // ↗️
+    // Afficher le popup lorsqu'on clique sur une cellule vide
+    if (isDialogVisible) {
+        AlertDialog(
+            onDismissRequest = {
+                isDialogVisible = false // Fermer le dialog quand on clique à l'extérieur
+            },
+            title = { Text("Enter a value") },
+            text = {
+                Column {
+                    // Saisie de la valeur avec validation
+                    TextField(
+                        value = inputValue,
+                        onValueChange = { value ->
+                            inputValue = value
+                            // Validation de la saisie
+                            if (value.toIntOrNull() in 3..8) {
+                                isValid = true
+                                errorMessage = ""
+                            } else if (value.isNotEmpty()) {
+                                isValid = false
+                                errorMessage = "Value must be between 3 and 8"
+                            }
+                        },
+                        label = { Text("Enter a value between 3 and 8") },
+                        keyboardOptions = KeyboardOptions.Default.copy(
+                            keyboardType = KeyboardType.Phone
+                        ),
+                        isError = !isValid, // Afficher l'erreur si la saisie est invalide
+                    )
+
+                    // Affichage du message d'erreur
+                    if (!isValid) {
+                        Text(
+                            text = errorMessage,
+                            color = Color.Red,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        // Si la saisie est valide, mettre à jour la valeur
+                        if (isValid && inputValue.isNotEmpty()) {
+                            onValueChange(inputValue.toInt())
+                            isDialogVisible = false // Fermer le popup
+                        }
+                    }
+                ) {
+                    Text("OK")
+                }
+            },
+            dismissButton = {
+                Button(
+                    onClick = {
+                        isDialogVisible = false // Fermer le popup sans rien changer
+                    }
+                ) {
+                    Text("Cancel")
                 }
             }
-        }
+        )
     }
 }
 
@@ -76,14 +160,22 @@ fun ArrowIcon(alignment: Alignment, rotation: Float) {
 }
 
 @Composable
-fun GameBoard(board: Board, onCellClick: (row: Int, col: Int) -> Unit) {
+fun GameBoard(board: Board, onCellClick: (row: Int, col: Int) -> Unit, onValueChange: (row: Int, col: Int, value: Int) -> Unit) {
     Column {
         for (row in board.indices) {
             Row {
                 for (col in board[row].indices) {
-                    GameCell(cell = board[row][col]) {
-                        onCellClick(row, col)
-                    }
+                    val cell = board[row][col]
+                    GameCell(cell = cell,
+                        onClick =  {
+                            // Appel à la fonction de clic
+                            onCellClick(row, col)
+                        },
+                        onValueChange ={ value ->
+                            // Mise à jour de la valeur de la cellule
+                            onValueChange(row, col, value)
+                        }
+                    )
                 }
             }
         }
@@ -142,9 +234,16 @@ fun PreviewGameBoard() {
     )
 
     ThreeForTenGameApplicationMobileTheme {
-        GameBoard(board = sampleBoard) { row, col ->
-            // Simuler un clic
-            println("Clicked cell at [$row, $col]")
-        }
+        GameBoard(board = sampleBoard,
+            onCellClick = { row, col ->
+                // Simuler un clic
+                println("Clicked cell at [$row, $col]")
+            },
+            onValueChange = { row, col, value ->
+                // Mise à jour de la valeur de la cellule
+                println("Setting value $value for cell [$row, $col]")
+                // Tu peux aussi appeler ton ViewModel pour mettre à jour l'état du jeu ici
+            }
+        )
     }
 }
