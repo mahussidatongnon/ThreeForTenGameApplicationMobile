@@ -34,7 +34,8 @@ GamePartRepository = GamePartRepository()) : ViewModel() {
     val gameState: State<GameState?>
         get() = _gameState
     val uiState: StateFlow<PlayGameUiState> = _uiState.asStateFlow()
-
+    val player: Player
+        get() = _player
     val webSocketClient = WebSocketClient.instance
 
     init {

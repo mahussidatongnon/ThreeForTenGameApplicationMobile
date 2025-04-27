@@ -10,25 +10,19 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.text.input.TextFieldLineLimits
-import androidx.compose.foundation.text.input.rememberTextFieldState
-import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
+import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.dto.PointDTO
+
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -43,30 +37,38 @@ import androidx.compose.ui.unit.sp
 import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.models.Cell
 import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.models.utils.WinningDirection
 import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.ui.theme.ThreeForTenGameApplicationMobileTheme
+import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.ui.theme.Yellow
 
 
 typealias Board = List<List<Cell?>>
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun GameCell(cell: Cell?, onClick: () -> Unit = {}, onValueChange: (Int) -> Unit = {}) {
+fun GameCell(cell: Cell?, onClick: () -> Unit = {}, onValueChange: (Int) -> Unit = {},
+             isGameBoardInteractive: Boolean = true,
+             isLastMove: Boolean = false
+     ) {
     var isDialogVisible by remember { mutableStateOf(false) }
     var inputValue by remember { mutableStateOf(cell?.value?.toString() ?: "3") } // Valeur par défaut à 3
     var errorMessage by remember { mutableStateOf("") } // Message d'erreur
     var isValid by remember { mutableStateOf(true) } // Valider si la saisie est correcte
-
+// Définir une couleur différente si c'est le dernier mouvement
+    val cellBackgroundColor = if (isLastMove) Yellow else Color.White
     Box(
         modifier = Modifier
             .size(50.dp)
-            .background(Color.White)
+            .background(cellBackgroundColor) // Appliquer la couleur de fond selon le dernier mouvement
             .border(1.dp, Color.Black)
-            .clickable {
-                // Ne rien faire si la cellule est déjà remplie
-                if (cell?.value == null) {
-                    onClick()
-                    isDialogVisible = true // Afficher le popup
+            .clickable(
+                enabled = isGameBoardInteractive, // Rendre le clic non interactif si nécessaire
+                onClick = {
+                    // Ne rien faire si la cellule est déjà remplie
+                    if (cell?.value == null) {
+                        onClick()
+                        isDialogVisible = true // Afficher le popup
+                    }
                 }
-            },
+            ),
         contentAlignment = Alignment.Center,
     ) {
         // Afficher la valeur de la cellule si ce n'est pas en mode édition
@@ -100,9 +102,9 @@ fun GameCell(cell: Cell?, onClick: () -> Unit = {}, onValueChange: (Int) -> Unit
                             }
                         },
                         label = { Text("Enter a value between 3 and 8") },
-                        keyboardOptions = KeyboardOptions.Default.copy(
-                            keyboardType = KeyboardType.Phone
-                        ),
+//                        keyboardOptions = KeyboardOptions.Default.copy(
+//                            keyboardType = KeyboardType.Number
+//                        ),
                         isError = !isValid, // Afficher l'erreur si la saisie est invalide
                     )
 
@@ -160,27 +162,45 @@ fun ArrowIcon(alignment: Alignment, rotation: Float) {
 }
 
 @Composable
-fun GameBoard(board: Board, onCellClick: (row: Int, col: Int) -> Unit, onValueChange: (row: Int, col: Int, value: Int) -> Unit) {
+fun GameBoard(
+    board: Board,
+    onCellClick: (row: Int, col: Int) -> Unit,
+    onValueChange: (row: Int, col: Int, value: Int) -> Unit,
+    lastMovePointDTO: PointDTO? = null,
+    isGameBoardInteractive: Boolean = true
+) {
     Column {
         for (row in board.indices) {
             Row {
                 for (col in board[row].indices) {
                     val cell = board[row][col]
-                    GameCell(cell = cell,
-                        onClick =  {
-                            // Appel à la fonction de clic
-                            onCellClick(row, col)
+
+                    // Vérification si cette cellule est celle du dernier mouvement
+                    val isLastMove = lastMovePointDTO != null && lastMovePointDTO.x == row && lastMovePointDTO.y == col
+
+                    GameCell(
+                        cell = cell,
+                        onClick = {
+                            if (isGameBoardInteractive) {
+                                // Appel à la fonction de clic uniquement si le plateau est interactif
+                                onCellClick(row, col)
+                            }
                         },
-                        onValueChange ={ value ->
+                        onValueChange = { value ->
                             // Mise à jour de la valeur de la cellule
-                            onValueChange(row, col, value)
-                        }
+                            if (isGameBoardInteractive) {
+                                onValueChange(row, col, value)
+                            }
+                        },
+                        isGameBoardInteractive = isGameBoardInteractive, // Passer l'état interactif
+                        isLastMove = isLastMove // Passer si c'est la dernière cellule jouée
                     )
                 }
             }
         }
     }
 }
+
 
 @Preview(showBackground = true)
 @Composable
@@ -243,7 +263,9 @@ fun PreviewGameBoard() {
                 // Mise à jour de la valeur de la cellule
                 println("Setting value $value for cell [$row, $col]")
                 // Tu peux aussi appeler ton ViewModel pour mettre à jour l'état du jeu ici
-            }
+            },
+            lastMovePointDTO = PointDTO(1, 1),
+            isGameBoardInteractive = false
         )
     }
 }
