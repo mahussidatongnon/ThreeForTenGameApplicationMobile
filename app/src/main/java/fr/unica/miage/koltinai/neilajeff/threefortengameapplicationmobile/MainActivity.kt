@@ -5,6 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.lifecycle.lifecycleScope
+import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.network.WebSocketClient
 import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.service.GameManager
 import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.services.PlayerDataStoreManager
 import kotlinx.coroutines.flow.map
@@ -24,6 +25,13 @@ class MainActivity : ComponentActivity() {
             playerDataStoreManager.loadUsername().map { username ->
                 GameManager.saveUsername(username)
             }
+            val webSocketClient = WebSocketClient.instance
+
+            webSocketClient.connect(
+                host = GameManager.SERVER_HOST,
+                port = GameManager.SERVER_PORT,
+                path = "/ws-game"
+            )
         }
 
         setContent {

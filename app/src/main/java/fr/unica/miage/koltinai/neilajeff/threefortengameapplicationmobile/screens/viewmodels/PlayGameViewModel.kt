@@ -8,6 +8,7 @@ import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.models
 import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.models.GameState
 import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.models.Player
 import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.models.utils.GamePartStatus
+import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.network.WebSocketClient
 import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.repositories.GamePartRepository
 import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.service.GameManager
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -31,6 +32,8 @@ GamePartRepository = GamePartRepository()) : ViewModel() {
         get() = _gameState
     val uiState: StateFlow<PlayGameUiState> = _uiState.asStateFlow()
 
+    val webSocketClient = WebSocketClient.instance
+
     init {
         _player = GameManager.player!!
         viewModelScope.launch {
@@ -42,6 +45,9 @@ GamePartRepository = GamePartRepository()) : ViewModel() {
             } else {
                 updateGame()
             }
+            val topic = "/topic/games.$gameId.state"
+            print("Before subscribe to: $topic")
+            webSocketClient.subscribe(topic)
         }
 
     }

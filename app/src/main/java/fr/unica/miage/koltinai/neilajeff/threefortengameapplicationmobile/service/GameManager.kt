@@ -7,6 +7,10 @@ object GameManager {
     private var _username: String? = null
     private var _player: Player? = null
 
+    const val SERVER_HOST = "10.0.2.2"
+    const val SERVER_PORT = 8080
+
+
     val username: String?
         get() = _username
 

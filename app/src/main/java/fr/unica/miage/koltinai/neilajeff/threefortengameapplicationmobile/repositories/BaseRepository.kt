@@ -1,5 +1,6 @@
 package fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.repositories
 
+import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.service.GameManager
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
@@ -20,7 +21,8 @@ open class BaseRepository {
         }
     }
 
-    protected val baseUrl = "http://10.0.2.2:8080"
+//    protected val baseUrl = "http://10.0.2.2:8080"
+    protected val baseUrl = "http://${GameManager.SERVER_HOST}:${GameManager.SERVER_PORT}"
 
 
 }

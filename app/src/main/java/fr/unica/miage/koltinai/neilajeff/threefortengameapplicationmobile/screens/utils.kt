@@ -2,6 +2,7 @@ package fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.scree
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -33,8 +34,9 @@ fun GameCell(cell: Cell?, onClick: () -> Unit = {}) {
         modifier = Modifier
             .size(50.dp)
             .background(Color.White)
-            .border(1.dp, Color.Black),
-        contentAlignment = Alignment.Center
+            .border(1.dp, Color.Black)
+            .clickable { onClick() }, // Ajout du onClick ici
+        contentAlignment = Alignment.Center,
     ) {
         // Affiche le chiffre au centre
         Text(
