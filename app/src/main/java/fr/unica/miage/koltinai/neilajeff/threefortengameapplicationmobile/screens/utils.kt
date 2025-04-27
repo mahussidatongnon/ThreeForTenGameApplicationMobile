@@ -31,7 +31,7 @@ typealias Board = List<List<Cell?>>
 fun GameCell(cell: Cell?, onClick: () -> Unit = {}) {
     Box(
         modifier = Modifier
-            .size(48.dp)
+            .size(50.dp)
             .background(Color.White)
             .border(1.dp, Color.Black),
         contentAlignment = Alignment.Center
@@ -39,7 +39,7 @@ fun GameCell(cell: Cell?, onClick: () -> Unit = {}) {
         // Affiche le chiffre au centre
         Text(
             text = cell?.value?.toString() ?: "",
-            fontSize = 20.sp
+            fontSize = 25.sp
         )
 
         if (cell != null) {
