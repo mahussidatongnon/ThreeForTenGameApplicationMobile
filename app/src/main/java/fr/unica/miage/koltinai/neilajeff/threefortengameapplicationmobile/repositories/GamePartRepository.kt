@@ -3,6 +3,7 @@ package fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.repos
 import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.dto.PlayGameDTO
 import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.models.GamePart
 import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.models.GameState
+import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.models.Player
 import io.ktor.client.call.body
 import io.ktor.client.request.accept
 import io.ktor.client.request.post
@@ -11,10 +12,19 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
+import kotlinx.serialization.Serializable
 
 data class PointDTO(
     val x: Int = 0,
     val y: Int = 0,
+)
+
+@Serializable
+data class CreateGameRequest(
+    val player1Username: String,
+    val player2Username: String,
+    val secretCode: String,
+    val nbCasesCote: Int
 )
 
 class GamePartRepository():BaseRepository() {
@@ -32,7 +42,7 @@ class GamePartRepository():BaseRepository() {
             accept(ContentType.Application.Json)
             contentType(ContentType.Application.Json)
         }
-//        println("Games: ${resp.bodyAsText()}")
+        println("Games: ${resp.bodyAsText()}")
         return resp.body()
     }
 
@@ -97,5 +107,48 @@ class GamePartRepository():BaseRepository() {
             throw Exception("Error: ${resp.status}, ${resp.bodyAsText()}")
         }
         return resp.body()
+    }
+
+    suspend fun getAllPlayers(): List<Player> {
+        try {
+            println("Récupération de tous les joueurs")
+            val resp = client.get("$baseUrl/players") {
+                accept(ContentType.Application.Json)
+                contentType(ContentType.Application.Json)
+            }
+            println("Players response: ${resp.bodyAsText()}")
+            return resp.body()
+        } catch (e: Exception) {
+            println("Erreur lors de la récupération des joueurs: ${e.message}")
+            throw e
+        }
+    }
+
+    suspend fun createGame(
+        player1Username: String,
+        player2Username: String,
+        secretCode: String,
+        nbCasesCote: Int
+    ): GamePart {
+        val requestBody = CreateGameRequest(
+            player1Username = player1Username,
+            player2Username = player2Username,
+            secretCode = secretCode,
+            nbCasesCote = nbCasesCote
+        )
+
+        val resp = client.post("$baseUrl/games") {
+            accept(ContentType.Application.Json)
+            contentType(ContentType.Application.Json)
+            setBody(requestBody)
+        }
+
+        println("Create Game Response: ${resp.bodyAsText()}")
+
+        if (resp.status.isSuccess()) {
+            return resp.body()
+        } else {
+            throw Exception("Error: ${resp.status}, ${resp.bodyAsText()}")
+        }
     }
 }

@@ -22,7 +22,7 @@ open class BaseRepository {
     }
 
 //    protected val baseUrl = "http://10.0.2.2:8080"
-    protected val baseUrl = "http://${GameManager.SERVER_HOST}:${GameManager.SERVER_PORT}"
+val baseUrl = "http://${GameManager.SERVER_HOST}:${GameManager.SERVER_PORT}"
 
 
 }

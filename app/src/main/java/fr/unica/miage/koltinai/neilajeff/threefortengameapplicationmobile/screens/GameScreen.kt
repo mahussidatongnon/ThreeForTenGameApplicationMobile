@@ -44,6 +44,9 @@ fun GameScreen(
     val uiState by viewModel.uiState.collectAsState()
     val playerDataStoreManager = remember { PlayerDataStoreManager(context) }
 
+    // État pour contrôler l'affichage du dialogue de création de partie
+    var showCreateGameDialog by remember { mutableStateOf(false) }
+
     // Récupérer les informations du joueur depuis GameManager
     val player = GameManager.player
 
@@ -54,6 +57,20 @@ fun GameScreen(
         } catch (e: Exception) {
             // Gestion supplémentaire des erreurs si nécessaire
         }
+    }
+
+    // Afficher le dialogue de création de partie si demandé
+    if (showCreateGameDialog) {
+        CreateGameDialog(
+            onDismiss = { showCreateGameDialog = false },
+            onGameCreated = { gameId ->
+                showCreateGameDialog = false
+                // Rafraîchir la liste des parties
+                viewModel.loadPlayerInfo(context)
+                // Naviguer vers la partie créée
+                navController.navigate(PlayGameRoute(gameId, autoStart = true))
+            }
+        )
     }
 
     Box(
@@ -212,7 +229,8 @@ fun GameScreen(
             // Bouton pour créer une nouvelle partie
             Button(
                 onClick = {
-                    // Action à implémenter pour créer une nouvelle partie
+                    // Ouvrir le dialogue de création de partie
+                    showCreateGameDialog = true
                 },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -229,6 +247,28 @@ fun GameScreen(
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     "Créer une nouvelle partie",
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
+            }
+
+            // Bouton pour rafraîchir la liste des parties
+            OutlinedButton(
+                onClick = {
+                    viewModel.loadPlayerInfo(context)
+                },
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = Purple
+                ),
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Refresh,
+                    contentDescription = "Rafraîchir"
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    "Rafraîchir la liste",
                     modifier = Modifier.padding(vertical = 8.dp)
                 )
             }
