@@ -44,7 +44,7 @@ fun PlayGameScreen(
         // Récupération des informations nécessaires
         val player: Player = playGameViewModel.player
         val board: Board = gameState!!.boardState!!
-        val isCurrentPlayer = gameState!!.currentPlayerId == player.id
+        val isCurrentPlayer = playGameViewModel.isCurrentPlayer
         val currentPlayerIndex = gameState!!.currentPlayerIndex
         val adversarialPlayerIndex = (currentPlayerIndex + 1) % 2
         val isGameFinished = gameState!!.isFinished

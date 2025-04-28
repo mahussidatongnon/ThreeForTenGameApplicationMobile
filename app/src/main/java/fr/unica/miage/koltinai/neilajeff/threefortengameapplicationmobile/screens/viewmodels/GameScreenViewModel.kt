@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.models.GamePart
 import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.models.Player
+import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.models.utils.GamePartStatus
 import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.service.GameManager
 import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.services.PlayerDataStoreManager
 import kotlinx.coroutines.CoroutineExceptionHandler
@@ -25,7 +26,10 @@ data class GameScreenUiState(
     val gamesPlayed: Int = 0,
     val gamesWon: Int = 0,
     val totalScore: Int = 0,
-    val availableGames: List<GamePart> = emptyList()
+    val availableGames: List<GamePart> = emptyList(),
+    val isGameStarted: Boolean = false,
+    val startedGameId: String? = null,
+
 )
 
 class GameScreenViewModel(val playerRepository: PlayerRepository = PlayerRepository(),
@@ -45,7 +49,7 @@ class GameScreenViewModel(val playerRepository: PlayerRepository = PlayerReposit
     }
 
     fun loadPlayerInfo(context: Context) {
-        viewModelScope.launch(coroutineExceptionHandler) {
+        viewModelScope.launch {
             try {
                 _uiState.update { it.copy(isLoading = true) }
 
@@ -88,6 +92,7 @@ class GameScreenViewModel(val playerRepository: PlayerRepository = PlayerReposit
                 }
             }
         }
+
     }
 
     private fun fetchAvailableGames(username: String) {
@@ -109,5 +114,28 @@ class GameScreenViewModel(val playerRepository: PlayerRepository = PlayerReposit
                 }
             }
         }
+    }
+
+    fun startGame(gameId: String) {
+        viewModelScope.launch {
+            var gamePart : GamePart
+            try {
+                gamePart = gamePartRepository.startGame(gameId)
+                println("Game started sucessfully")
+            } catch (e: Exception) {
+                gamePart = gamePartRepository.getGameById(gameId)
+                println("Failed to start game, then get Game info")
+            }
+            println("gamePart:  $gamePart")
+            if(gamePart.status == GamePartStatus.STARTED) {
+                _uiState.update {
+                    it.copy(
+                        isGameStarted = true,
+                        startedGameId = gameId
+                    )
+                }
+            }
+        }
+
     }
 }

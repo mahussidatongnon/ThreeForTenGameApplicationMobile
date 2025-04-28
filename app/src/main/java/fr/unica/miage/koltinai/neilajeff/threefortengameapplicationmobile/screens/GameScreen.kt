@@ -47,6 +47,9 @@ fun GameScreen(
     // Récupérer les informations du joueur depuis GameManager
     val player = GameManager.player
 
+    if (uiState.isGameStarted && uiState.startedGameId != null) {
+        navController.navigate(PlayGameRoute(uiState.startedGameId!!, autoStart = true))
+    }
     // Charger les informations du joueur au lancement
     LaunchedEffect(Unit) {
         try {
@@ -174,7 +177,7 @@ fun GameScreen(
                             },
                             onStartedClick = {
                                 println("onStartedClick")
-                                navController.navigate(PlayGameRoute(game.id, autoStart = true))
+                                viewModel.startGame(gameId = game.id)
                             },
                             onReviewClick = {
                                 println("onReviewClick")
