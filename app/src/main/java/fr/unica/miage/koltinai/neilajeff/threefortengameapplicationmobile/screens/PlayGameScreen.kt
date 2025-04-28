@@ -43,6 +43,11 @@ fun PlayGameScreen(
     } else {
         // Récupération des informations nécessaires
         val player: Player = playGameViewModel.player
+        val opponentPlayerInfo = if(gamePart!!.player1.username == player.username) {
+            gamePart!!.player2
+        } else {
+            gamePart!!.player1
+        }
         val board: Board = gameState!!.boardState!!
         val isCurrentPlayer = playGameViewModel.isCurrentPlayer
         val currentPlayerIndex = gameState!!.currentPlayerIndex
@@ -58,13 +63,20 @@ fun PlayGameScreen(
             )
         }
 
+
         // Calcul de l'interactivité du plateau
         val isGameBoardInteractive = !isGameFinished && isCurrentPlayer
 
         // Récupération des scores des joueurs (en utilisant les indices des joueurs)
-        val currentPlayerScore = gameState!!.scores[currentPlayerIndex] ?: 0
-        val opponentScore = gameState!!.scores[adversarialPlayerIndex] ?: 0
-
+        var currentPlayerScore = 0
+        var opponentScore = 0
+        if (isCurrentPlayer) {
+            currentPlayerScore = gameState!!.scores[currentPlayerIndex] ?: 0
+            opponentScore = gameState!!.scores[adversarialPlayerIndex] ?: 0
+        } else {
+            currentPlayerScore = gameState!!.scores[adversarialPlayerIndex] ?: 0
+            opponentScore = gameState!!.scores[currentPlayerIndex] ?: 0
+        }
 
         Box(
             modifier = Modifier
@@ -84,15 +96,15 @@ fun PlayGameScreen(
                     horizontalArrangement = Arrangement.Center
                 ) {
                     Text(
-                        text = "Player: $currentPlayerScore",
+                        text = "${player.username} (vous): $currentPlayerScore",
                         modifier = Modifier.padding(end = 16.dp),
-                        style = MaterialTheme.typography.headlineLarge,
+                        style = MaterialTheme.typography.headlineMedium,
                         color = if (isCurrentPlayer) Green else Color.Black // Indicateur visuel du joueur actuel
                     )
 
                     Text(
-                        text = "Opponent: $opponentScore",
-                        style = MaterialTheme.typography.headlineLarge,
+                        text = "${opponentPlayerInfo!!.username}: $opponentScore",
+                        style = MaterialTheme.typography.headlineMedium,
                         modifier = Modifier.padding(end = 16.dp),
                         color = if (!isCurrentPlayer) Green else Color.Black // Indicateur visuel du joueur actuel
                     )
