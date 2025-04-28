@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardOptions
@@ -76,6 +77,54 @@ fun GameCell(cell: Cell?, onClick: () -> Unit = {}, onValueChange: (Int) -> Unit
             text = cell?.value?.toString() ?: "",
             fontSize = 25.sp
         )
+
+        // Afficher les directions gagnées
+        cell?.wonCasesDirections?.forEach { direction ->
+            when (direction) {
+                WinningDirection.UP_DIAGONAL -> {
+                    Text(
+                        text = "↗",
+                        fontSize = 12.sp,
+                        color = Color.Green,
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .offset((-4).dp, (4).dp)
+                    )
+                }
+                WinningDirection.DOWN_DIAGONAL -> {
+                    Text(
+                        text = "↘",
+                        fontSize = 12.sp,
+                        color = Color.Green,
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .offset((-4).dp, (-4).dp)
+                    )
+                }
+                WinningDirection.HORIZONTAL -> {
+                    // Trait horizontal "—"
+                    Text(
+                        text = "—", // un tiret long
+                        fontSize = 18.sp,
+                        color = Color.Blue,
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .offset(0.dp, (-12).dp)
+                    )
+                }
+                WinningDirection.VERTICAL -> {
+                    // Trait vertical "|"
+                    Text(
+                        text = "|",
+                        fontSize = 18.sp,
+                        color = Color.Blue,
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .offset(0.dp, (12).dp)
+                    )
+                }
+            }
+        }
     }
 
     // Afficher le popup lorsqu'on clique sur une cellule vide
