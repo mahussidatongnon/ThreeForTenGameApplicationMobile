@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -29,6 +31,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -80,45 +83,29 @@ fun GameCell(cell: Cell?, onClick: () -> Unit = {}, onValueChange: (Int) -> Unit
         cell?.wonCasesDirections?.forEach { direction ->
             when (direction) {
                 WinningDirection.UP_DIAGONAL -> {
-                    Text(
-                        text = "↗",
-                        fontSize = 12.sp,
-                        color = Color.Green,
-                        modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .offset((-4).dp, (4).dp)
+                    DirectionIcon(
+                        alignment = Alignment.TopEnd,
+                        rotation = -45f
                     )
                 }
                 WinningDirection.DOWN_DIAGONAL -> {
-                    Text(
-                        text = "↘",
-                        fontSize = 12.sp,
-                        color = Color.Green,
-                        modifier = Modifier
-                            .align(Alignment.BottomEnd)
-                            .offset((-4).dp, (-4).dp)
+                    DirectionIcon(
+                        alignment = Alignment.BottomEnd,
+                        rotation = 45f
                     )
                 }
                 WinningDirection.HORIZONTAL -> {
-                    // Trait horizontal "—"
-                    Text(
-                        text = "—", // un tiret long
-                        fontSize = 18.sp,
-                        color = Color.Blue,
-                        modifier = Modifier
-                            .align(Alignment.Center)
-                            .offset(0.dp, (-12).dp)
+                    DirectionIcon(
+                        alignment = Alignment.CenterEnd,
+                        rotation = 0f,
+                        icon =  Icons.AutoMirrored.Filled.ArrowForward
                     )
                 }
                 WinningDirection.VERTICAL -> {
-                    // Trait vertical "|"
-                    Text(
-                        text = "|",
-                        fontSize = 18.sp,
-                        color = Color.Blue,
-                        modifier = Modifier
-                            .align(Alignment.Center)
-                            .offset(0.dp, (12).dp)
+                    DirectionIcon(
+                        alignment = Alignment.BottomCenter,
+                        rotation = 90f,
+                        icon =  Icons.AutoMirrored.Filled.ArrowForward
                     )
                 }
             }
@@ -192,7 +179,12 @@ fun GameCell(cell: Cell?, onClick: () -> Unit = {}, onValueChange: (Int) -> Unit
 }
 
 @Composable
-fun ArrowIcon(alignment: Alignment, rotation: Float) {
+fun DirectionIcon(
+    alignment: Alignment,
+    rotation: Float = 0f,
+    icon: ImageVector = Icons.AutoMirrored.Filled.ArrowForward, // Icône par défaut : flèche
+    tint: Color = Color.Red
+) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -200,13 +192,16 @@ fun ArrowIcon(alignment: Alignment, rotation: Float) {
         contentAlignment = alignment
     ) {
         Icon(
-            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+            imageVector = icon,
             contentDescription = null,
-            modifier = Modifier.size(12.dp).rotate(rotation),
-            tint = Color.Red
+            modifier = Modifier
+                .size(12.dp)
+                .rotate(rotation),
+            tint = tint
         )
     }
 }
+
 
 @Composable
 fun GameBoard(
