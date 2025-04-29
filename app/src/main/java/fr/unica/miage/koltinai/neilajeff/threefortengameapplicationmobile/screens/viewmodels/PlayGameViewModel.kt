@@ -14,6 +14,7 @@ import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.models
 import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.network.WebSocketClient
 import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.repositories.GamePartRepository
 import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.service.GameManager
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -22,7 +23,7 @@ import kotlinx.coroutines.launch
 data class PlayGameUiState(
     val isGameStateLoading: Boolean = false
 )
-class PlayGameViewModel(val gameId: String, autoStart: Boolean = false, val gamePartRepository:
+class PlayGameViewModel(val gameId: String, val autoStart: Boolean = false, val gamePartRepository:
 GamePartRepository = GamePartRepository()) : ViewModel() {
     private var _player: Player
     private var _gameState = mutableStateOf<GameState?>(null)
@@ -37,72 +38,41 @@ GamePartRepository = GamePartRepository()) : ViewModel() {
     val player: Player
         get() = _player
     val webSocketClient = WebSocketClient.instance
+    val isCurrentPlayer: Boolean
+        get() {
+            if (gameState.value != null) {
+                return gameState.value!!.currentPlayerId == player.id
+            }
+            return false
+        }
+
 
     init {
         _player = GameManager.player!!
-        viewModelScope.launch {
-            val gamePartInfo = gamePartRepository.getGameById(gameId)
-            _gamePart.value = gamePartInfo
-
-            if(autoStart) {
-                startGame()
-            } else {
-                updateGame()
-            }
-            val topic = "/topic/games.$gameId.state"
-            print("Before subscribe to: $topic")
-            webSocketClient.subscribe(topic)
-        }
-
+        updateGameInfos()
+        startAutoUpdate()
     }
 
-    fun updateGame() {
-        val currentGamePart = _gamePart.value
-
-        if (currentGamePart == null) {
-            println("Pas de GamePart disponible pour startGame")
-            return
-        }
+    fun updateGameInfos() {
 
         viewModelScope.launch {
-            val updatedGamePart: GamePart = gamePartRepository.getGameById(currentGamePart!!.id)
-            _gamePart.value = updatedGamePart
-
-            if(updatedGamePart.status == GamePartStatus.WAITING) {
-                println("Ce jeu n'a pas de state de disponible")
-                return@launch
-            }
-
-            val gameState = gamePartRepository.getGameState(gamePart.value!!.id)
-            _gameState.value = gameState
+            _updateGameInfo()
         }
     }
 
-    fun startGame() {
-        val currentGamePart = _gamePart.value
+    private suspend fun _updateGameInfo() {
+        val updatedGamePart: GamePart = gamePartRepository.getGameById(gameId)
+        _gamePart.value = updatedGamePart
 
-        if (currentGamePart == null) {
-            println("Pas de GamePart disponible pour startGame")
+        if(updatedGamePart.status == GamePartStatus.WAITING) {
+            println("Ce jeu n'a pas de state de disponible")
             return
         }
 
-        if (currentGamePart.status != GamePartStatus.WAITING) {
-            println("Le jeu est déjà démarré, pas besoin de startGame")
-            return
-        }
-
-        viewModelScope.launch {
-            try {
-                val updatedGamePart = gamePartRepository.startGame(currentGamePart.id)
-                _gamePart.value = updatedGamePart
-
-                val gameState = gamePartRepository.getGameState(updatedGamePart.id)
-                _gameState.value = gameState
-            } catch (e: Exception) {
-                println("Erreur lors du startGame: $e")
-            }
-        }
+        val gameState = gamePartRepository.getGameState(gamePart.value!!.id)
+        _gameState.value = gameState
     }
+
 
     fun playGame(value: Int, x: Int, y: Int) {
         val playGameDTO = PlayGameDTO(
@@ -115,6 +85,21 @@ GamePartRepository = GamePartRepository()) : ViewModel() {
             val gameState = gamePartRepository.playGame(gamePart.value!!.id, playGameDTO)
             _gameState.value = gameState
         }
-
     }
+
+    // Fonction pour mettre à jour périodiquement l'état du jeu
+    private fun startAutoUpdate() {
+        viewModelScope.launch {
+            println("Enter startAutoUpdate")
+            while (true) {
+                delay(3000)  // Attendre 5 secondes avant de mettre à jour
+                if (gameState.value != null &&  !isCurrentPlayer) {
+                    println("It's not current player ")
+                    _updateGameInfo()
+                } else
+                    println("It's current player ")
+            }
+        }
+    }
+
 }
