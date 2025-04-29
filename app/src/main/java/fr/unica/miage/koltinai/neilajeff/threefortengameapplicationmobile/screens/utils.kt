@@ -51,7 +51,7 @@ fun GameCell(cell: Cell?, onClick: () -> Unit = {}, onValueChange: (Int) -> Unit
              isLastMove: Boolean = false
      ) {
     var isDialogVisible by remember { mutableStateOf(false) }
-    var inputValue by remember { mutableStateOf(cell?.value?.toString() ?: "3") } // Valeur par défaut à 3
+    var inputValue by remember { mutableStateOf(cell?.value?.toString() ?: "1") } // Valeur par défaut à 3
     var errorMessage by remember { mutableStateOf("") } // Message d'erreur
     var isValid by remember { mutableStateOf(true) } // Valider si la saisie est correcte
 // Définir une couleur différente si c'est le dernier mouvement
@@ -127,15 +127,15 @@ fun GameCell(cell: Cell?, onClick: () -> Unit = {}, onValueChange: (Int) -> Unit
                         onValueChange = { value ->
                             inputValue = value
                             // Validation de la saisie
-                            if (value.toIntOrNull() in 3..8) {
+                            if (value.toIntOrNull() in 1..8) {
                                 isValid = true
                                 errorMessage = ""
                             } else if (value.isNotEmpty()) {
                                 isValid = false
-                                errorMessage = "Value must be between 3 and 8"
+                                errorMessage = "Value must be between 1 and 8"
                             }
                         },
-                        label = { Text("Enter a value between 3 and 8") },
+                        label = { Text("Enter a value between 1 and 8") },
 //                        keyboardOptions = KeyboardOptions.Default.copy(
 //                            keyboardType = KeyboardType.Number
 //                        ),
