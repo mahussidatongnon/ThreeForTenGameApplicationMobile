@@ -3,6 +3,7 @@ package fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -16,6 +17,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.screens.GameScreen
 import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.screens.PlayGameScreen
+import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.screens.RulesScreen
 import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.screens.WelcomeScreen
 import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.screens.viewmodels.MyAppScaffoldViewModel
 import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.screens.viewmodels.MyAppViewModel
@@ -25,12 +27,7 @@ import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.ui.the
 // Les routes définies comme strings simples
 const val WELCOME_ROUTE = "welcome"
 const val GAMES_ROUTE = "games"
-
-//@kotlinx.serialization.Serializable
-//object WelcomeRoute
-//
-//@kotlinx.serialization.Serializable
-//object GameRoute
+const val RULES_ROUTE = "rules" // Nouvelle route pour les règles du jeu
 
 @kotlinx.serialization.Serializable
 data class PlayGameRoute(val gameId: String, val autoStart : Boolean = false)
@@ -81,9 +78,15 @@ fun MyApp(myAppViewModel: MyAppViewModel = MyAppViewModel()) {
                 navController = navController,
                 title = "3 pour 10 - Game (${playGameRoute.gameId})"
             ) { paddingValues ->
-
-                PlayGameScreen(PlayGameViewModel(playGameRoute.gameId, autoStart = playGameRoute.autoStart))
+                PlayGameScreen(
+                    playGameViewModel = PlayGameViewModel(playGameRoute.gameId, autoStart = playGameRoute.autoStart),
+                    navController = navController
+                )
             }
+        }
+        // Nouvel écran pour les règles du jeu
+        composable(RULES_ROUTE) {
+            RulesScreen(navController = navController)
         }
     }
 }
@@ -105,12 +108,24 @@ fun MyAppScaffold(
                 title = { Text(title, color = Color.White) },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Purple
-                )
+                ),
+                actions = {
+                    // Bouton pour accéder aux règles du jeu
+                    IconButton(
+                        onClick = { navController.navigate(RULES_ROUTE) }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Info, // Utilisation de l'icône Info à la place de Help
+                            contentDescription = "Règles du jeu",
+                            tint = Color.White
+                        )
+                    }
+                }
             )
         },
         bottomBar = {
             // N'afficher la barre de navigation que sur l'écran principal
-            if (currentRoute != WELCOME_ROUTE) {
+            if (currentRoute != WELCOME_ROUTE && currentRoute != RULES_ROUTE) {
                 NavigationBar(
                     containerColor = Purple.copy(alpha = 0.1f)
                 ) {

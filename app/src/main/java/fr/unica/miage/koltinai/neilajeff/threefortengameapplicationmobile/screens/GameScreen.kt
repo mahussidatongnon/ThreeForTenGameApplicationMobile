@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.PlayGameRoute
+import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.RULES_ROUTE
 import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.models.utils.GamePartStatus
 import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.screens.viewmodels.GameItemViewModel
 import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.screens.viewmodels.GameScreenViewModel
@@ -184,23 +185,87 @@ fun GameScreen(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     uiState.availableGames.forEach { game ->
-                        GameItem(
-                            GameItemViewModel(gamePart = game),
-                            onAdd2ndPlayerClick = {
-                                println("onAdd2ndPlayerClick")
-                            },
-                            onStartedClick = {
-                                println("onStartedClick")
-                                navController.navigate(PlayGameRoute(game.id, autoStart = true))
-                            },
-                            onReviewClick = {
-                                println("onReviewClick")
-                            },
-                            onContinueClick = {
-                                println("onStartedClick")
-                                navController.navigate(PlayGameRoute(game.id, autoStart = false))
+                        // Déterminer la couleur en fonction du statut
+                        val buttonColor = when (game.status) {
+                            GamePartStatus.WAITING -> Yellow
+                            GamePartStatus.STARTED -> Green
+                            else -> Green
+                        }
+
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(8.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = Color.White
+                            )
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column {
+                                    Text(
+                                        text = "Partie de ${game.player1.username}",
+                                        fontWeight = FontWeight.Medium,
+                                        color = Color.Black
+                                    )
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier.padding(top = 4.dp)
+                                    ) {
+                                        // Point de couleur pour le statut
+                                        Box(
+                                            modifier = Modifier
+                                                .size(8.dp)
+                                                .background(
+                                                    color = buttonColor,
+                                                    shape = RoundedCornerShape(4.dp)
+                                                )
+                                        )
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Text(
+                                            text = "Statut: ${game.status}",
+                                            fontSize = 14.sp,
+                                            color = Color.DarkGray
+                                        )
+                                    }
+                                }
+
+                                // Bouton compact à droite
+                                Button(
+                                    onClick = {
+                                        when (game.status) {
+                                            GamePartStatus.WAITING -> {
+                                                if (game.player2 == null) {
+                                                    // Logique pour ajouter un second joueur si nécessaire
+                                                } else {
+                                                    navController.navigate(PlayGameRoute(game.id, autoStart = true))
+                                                }
+                                            }
+                                            GamePartStatus.STARTED -> {
+                                                navController.navigate(PlayGameRoute(game.id, autoStart = false))
+                                            }
+                                            else -> {
+                                                // Pour les parties terminées
+                                            }
+                                        }
+                                    },
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = buttonColor
+                                    ),
+                                    shape = RoundedCornerShape(20.dp)
+                                ) {
+                                    Text(
+                                        "Ouvrir la partie",
+                                        color = Color.Black,
+                                        fontSize = 14.sp
+                                    )
+                                }
                             }
-                        )
+                        }
                     }
                 }
             } else if (!uiState.isLoading && uiState.errorMessage.isEmpty()) {
@@ -324,112 +389,33 @@ fun GameScreen(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun GameItem(
-    gameItemViewModel: GameItemViewModel,
-    onAdd2ndPlayerClick: () -> Unit = {},
-    onStartedClick: () -> Unit = {},
-    onContinueClick: () -> Unit = {},
-    onReviewClick: () -> Unit = {},
+fun GameStatItem(
+    label: String,
+    value: String,
+    color: Color
 ) {
-
-    val _color = when {
-        gameItemViewModel.gamePart.status == GamePartStatus.WAITING -> Yellow
-        gameItemViewModel.gamePart.status == GamePartStatus.STARTED -> Green
-        else -> Green
-    }
-
     Card(
-        modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color.White
+            containerColor = color.copy(alpha = 0.1f)
         )
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.padding(vertical = 8.dp, horizontal = 16.dp)
         ) {
-            Column {
-                Text(
-                    text = "Partie de ${gameItemViewModel.gamePart.player1.username}",
-                    fontWeight = FontWeight.Medium,
-                    color = Color.Black
-                )
-                Text(
-                    text = "ID: ${gameItemViewModel.gamePart.id}",
-                    fontSize = 12.sp,
-                    color = Color.Gray
-                )
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(top = 4.dp)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(8.dp)
-                            .background(
-                                color = _color,
-                                shape = RoundedCornerShape(4.dp)
-                            )
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = "Statut: ${gameItemViewModel.gamePart.status}",
-                        fontSize = 14.sp,
-                        color = Color.DarkGray
-                    )
-                }
-            }
-            if (gameItemViewModel.gamePart.status == GamePartStatus.WAITING) {
-                if (gameItemViewModel.gamePart.player2 == null) {
-                    Button(
-                        onClick = onAdd2ndPlayerClick,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = _color
-                        ),
-                        shape = RoundedCornerShape(20.dp),
-                    ) {
-                        Text("Ajouter Joueur", color = Color.Black)
-                    }
-                } else {
-                    Button(
-                        onClick = onStartedClick,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = _color
-                        ),
-                        shape = RoundedCornerShape(20.dp),
-                    ) {
-                        Text("Démarrer", color = Color.Black)
-                    }
-                }
-            } else {
-                if (gameItemViewModel.gamePart.status == GamePartStatus.STARTED) {
-                    Button(
-                        onClick = onContinueClick,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor =_color
-                        ),
-                        shape = RoundedCornerShape(20.dp),
-                    ) {
-                        Text("Continuer", color = Color.Black)
-                    }
-                } else {
-                    Button(
-                        onClick = onReviewClick,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = _color
-                        ),
-                        shape = RoundedCornerShape(20.dp),
-                    ) {
-                        Text("Revoir la partie", color = Color.Black)
-                    }
-                }
-            }
+            Text(
+                text = value,
+                fontWeight = FontWeight.Bold,
+                fontSize = 20.sp,
+                color = color
+            )
+            Text(
+                text = label,
+                fontSize = 14.sp,
+                color = Color.DarkGray
+            )
         }
     }
 }
