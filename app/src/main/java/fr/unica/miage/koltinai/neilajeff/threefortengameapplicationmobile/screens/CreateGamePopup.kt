@@ -1,5 +1,6 @@
 package fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.screens
 
+import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -16,13 +17,17 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.models.GamePart
 import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.models.utils.AiPlayerType
 import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.repositories.GamePartRepository
 import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.service.GameManager
 import fr.unica.miage.koltinai.neilajeff.threefortengameapplicationmobile.ui.theme.*
 import kotlinx.coroutines.launch
 import kotlin.random.Random
+
+// Classe d'exception pour les erreurs d'API
+class ApiException(val status: Int, message: String) : Exception(message)
+
+private const val TAG = "CreateGameDialog"
 
 @Composable
 fun CreateGameDialog(
@@ -312,7 +317,6 @@ fun CreateGameDialog(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 // Bouton Valider
-                // Bouton Valider
                 Button(
                     onClick = {
                         // Validation de base
@@ -336,7 +340,7 @@ fun CreateGameDialog(
 
                         scope.launch {
                             try {
-                                // Si c'est un joueur humain, vérifier s'il existe
+                                // Vérifier l'existence du joueur humain
                                 if (isHumanOpponent) {
                                     try {
                                         val allPlayers = gameRepository.getAllPlayers()
@@ -348,24 +352,25 @@ fun CreateGameDialog(
                                             return@launch
                                         }
                                     } catch (e: Exception) {
-                                        // En cas d'erreur pour récupérer les joueurs, on continue quand même
-                                        println("Impossible de vérifier l'existence du joueur: ${e.message}")
+                                        // Log l'erreur mais continue
+                                        Log.e(TAG, "Erreur lors de la vérification de l'existence du joueur: ${e.message}", e)
                                     }
                                 }
 
-                                // Déterminer le nom du joueur 2 en fonction du type d'adversaire
+                                // Déterminer le nom du joueur 2
                                 val player2Name = if (isHumanOpponent) {
                                     player2Username
                                 } else {
-                                    when (selectedAiType) {
-                                        AiPlayerType.RANDOM_AI -> "RANDOM_AI"
-                                        AiPlayerType.PASSIF_MOST_AWAY_CONNER_AI -> "PASSIF_MOST_AWAY_CONNER_AI"
-                                        AiPlayerType.ACTIF_AI -> "ACTIF_AI"
-                                    }
+                                    selectedAiType.toString()
                                 }
 
-                                println("Tentative de création de partie avec: player1=$player1Username, player2=$player2Name, nbCasesCote=$boardSize")
+                                // Log des paramètres pour le débogage
+                                Log.d(TAG, "Création de partie: player1=$player1Username, player2=$player2Name, nbCasesCote=$boardSize, secretCode=$secretCode")
 
+                                // TEST: Imprimez également les informations du serveur
+                                Log.d(TAG, "Serveur: HOST=${GameManager.SERVER_HOST}, PORT=${GameManager.SERVER_PORT}")
+
+                                // Utiliser une approche directe pour créer la partie
                                 val gamePart = gameRepository.createGame(
                                     player1Username = player1Username,
                                     player2Username = player2Name,
@@ -373,20 +378,36 @@ fun CreateGameDialog(
                                     nbCasesCote = boardSize
                                 )
 
-                                // Démarrer la partie si succès
-                                try {
-                                    gameRepository.startGame(gamePart.id)
-                                    println("Partie démarrée avec succès: ${gamePart.id}")
-                                } catch (e: Exception) {
-                                    println("Erreur lors du démarrage de la partie: ${e.message}")
-                                    // On continue même si le démarrage échoue
-                                }
+                                Log.d(TAG, "Partie créée avec succès, ID: ${gamePart.id}")
 
-                                isCreating = false
-                                onGameCreated(gamePart.id)
+                                // Démarrer la partie après création
+                                try {
+                                    val startedGame = gameRepository.startGame(gamePart.id)
+                                    Log.d(TAG, "Partie démarrée avec succès: ${startedGame.id}, statut: ${startedGame.status}")
+
+                                    isCreating = false
+                                    onGameCreated(gamePart.id)
+                                } catch (e: Exception) {
+                                    // Si le démarrage échoue, on considère que la création n'est pas complète
+                                    Log.e(TAG, "Erreur lors du démarrage de la partie: ${e.message}", e)
+                                    errorMessage = "Erreur lors du démarrage: ${e.message}"
+                                    isCreating = false
+                                }
                             } catch (e: Exception) {
-                                println("Erreur lors de la création: ${e.message}")
-                                errorMessage = "Erreur: ${e.message}"
+                                Log.e(TAG, "Erreur lors de la création de la partie: ${e.message}", e)
+
+                                // Analyser l'erreur pour donner un message plus précis
+                                errorMessage = when {
+                                    e.message?.contains("405") == true -> {
+                                        "Erreur 405 Method Not Allowed - L'API ne supporte pas cette opération"
+                                    }
+                                    e.message?.contains("connect") == true -> {
+                                        "Erreur de connexion au serveur - Vérifiez votre connexion réseau"
+                                    }
+                                    else -> {
+                                        "Erreur: ${e.message}"
+                                    }
+                                }
                                 isCreating = false
                             }
                         }

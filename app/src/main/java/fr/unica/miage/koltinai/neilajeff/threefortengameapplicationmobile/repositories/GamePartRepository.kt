@@ -137,7 +137,7 @@ class GamePartRepository():BaseRepository() {
             nbCasesCote = nbCasesCote
         )
 
-        val resp = client.post("$baseUrl/games") {
+        val resp = client.post("$baseUrl/games/") {
             accept(ContentType.Application.Json)
             contentType(ContentType.Application.Json)
             setBody(requestBody)

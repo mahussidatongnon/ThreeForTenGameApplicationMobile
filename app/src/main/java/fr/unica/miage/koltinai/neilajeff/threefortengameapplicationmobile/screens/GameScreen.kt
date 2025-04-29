@@ -68,7 +68,7 @@ fun GameScreen(
                 // Rafraîchir la liste des parties
                 viewModel.loadPlayerInfo(context)
                 // Naviguer vers la partie créée
-                navController.navigate(PlayGameRoute(gameId, autoStart = true))
+                navController.navigate(PlayGameRoute(gameId, autoStart = false))
             }
         )
     }
